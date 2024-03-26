@@ -38,9 +38,6 @@ def bulk_insert(df: DataFrame, retailer_id):
 
     table_id = REQUEST_DATA.get("table_id")
 
-    # SET GOOGLE_APPLICATION_CREDENTIALS env var to the path of cred file before running this
-    # to_gbq(df, table_id, project_id=PROJECT_ID, if_exists="append", progress_bar=True)
-
     BATCH_SIZE = 1000
     total_rows = len(df)
     num_batches = (total_rows // BATCH_SIZE) + (
