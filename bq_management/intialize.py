@@ -1,5 +1,5 @@
 from google.cloud import bigquery
-from .constants import DATASET_ID, PROJECT_ID, DATASET_LOCATION
+from .constants import DATASET_ID, PROJECT_ID, DATASET_LOCATION, CREDS_FILE_PATH
 import logging
 from google.cloud import bigquery
 from .schemas import REQUEST_DATA, BOL_EAN_DATA, BOL_OFFER_DATA
@@ -7,7 +7,7 @@ from google.api_core.exceptions import Conflict
 
 
 logging.basicConfig(level=logging.INFO)
-service_account_path = "optimistic-yeti-353713-eade4a9feeb0.json"
+service_account_path = CREDS_FILE_PATH
 client = bigquery.Client.from_service_account_json(service_account_path)
 
 
