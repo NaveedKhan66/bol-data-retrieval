@@ -53,6 +53,8 @@ urllib3 = "==2.2.1"
 watchdog = "==4.0.0"
 werkzeug = "==3.0.1"
 jwt = "*"
+pyjwt = "*"
+python-dotenv = "*"
 
 [dev-packages]
 

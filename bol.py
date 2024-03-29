@@ -3,12 +3,15 @@ import base64
 import jwt
 import time
 from bq_management.intialize import client
-from bq_management.schemas import REQUEST_DATA,BOL_EAN_DATA,BOL_OFFER_DATA
+from bq_management.schemas import REQUEST_DATA, BOL_EAN_DATA, BOL_OFFER_DATA
+import functions_framework
+from flask import make_response
+import os
 
-BOL_CLIENT_ID = "c8946e8c-06fb-447f-aad6-f143496fcc18"
-BOL_CLIENT_SECRET = "Bl!ZfisCwDKON!+83ZG7fTMld!Kozbp2qQ0k7t?kCia7wfkgS)Kb13twdycbdcPD"
+BOL_CLIENT_ID = os.getenv("BOL_CLIENT_ID")
+BOL_CLIENT_SECRET = os.getenv("BOL_CLIENT_SECRET")
 
-BOL_BASE_API_URL = "https://api.bol.com"
+BOL_BASE_API_URL = os.getenv("BOL_BASE_API_URL")
 
 
 def encode_base64(string):
@@ -39,15 +42,13 @@ def login_bol():
 
 
 def Authorization_middleware(jwt_token):
-    decoded_token = jwt.decode(jwt_token, verify=False)
+    decoded_token = jwt.decode(
+        jwt_token, options={"verify_signature": False}, algorithms=["RS256"]
+    )
     expiration_time = decoded_token["exp"]
-
-    if time.time() > expiration_time:
+    if time.time() > (expiration_time - 120):
         jwt_token = login_bol()
     return jwt_token
-
-
-jwt_token = login_bol()
 
 
 def is_within_threshold_percent(threshold, price, value):
@@ -57,12 +58,31 @@ def is_within_threshold_percent(threshold, price, value):
     return lower_bound <= value <= upper_bound
 
 
-data = []
+def format_offer_data(offer, row):
+    return {
+        "price": offer["price"],
+        "job_id": row["batch_id"],
+        "bol_offer_id": offer["offerId"],
+        "retailer_id": offer["retailerId"],
+        "country_code": offer["countryCode"],
+        "best_offer": offer["bestOffer"],
+        "price": offer["price"],
+        "fulfilment_method": offer["fulfilmentMethod"],
+        "condition": offer["condition"],
+        "ultimate_order_time": offer["ultimateOrderTime"],
+        "min_delivery_date": offer["minDeliveryDate"],
+        "max_delivery_date": offer["maxDeliveryDate"],
+    }
 
 
-def get_filtered_products(jwt_token,row, page=1):
+def process_offers(response_data, row, product_data):
+    for offer in response_data.get("offers", []):
+        if is_within_threshold_percent(0.1, row["price"], offer["price"]):
+            product_data.append(format_offer_data(offer, row))
+
+
+def fetch_product_offers(jwt_token, product_data, row, page=1):
     api_url = f"{BOL_BASE_API_URL}/retailer/products/{row['EAN']}/offers?page={page}"
-    print(api_url, "api_url")
 
     headers = {
         "Authorization": f"Bearer {jwt_token}",
@@ -70,61 +90,58 @@ def get_filtered_products(jwt_token,row, page=1):
         "Accept": "application/vnd.retailer.v9+json",
     }
 
-    response = requests.get(
-        api_url,
-        headers=headers,
-    )
+    try:
+        response = requests.get(api_url, headers=headers)
+        response.raise_for_status()
 
-    if response.ok:
         response_data = response.json()
-        print(response_data)
-        if response_data:
-            for offer in response_data["offers"]:
-                if is_within_threshold_percent(0.1, row['price'], offer["price"]):
-                    data.append({
-                        'price':offer['price'],
-                        'job_id':row['batch_id'],
-                        'bol_offer_id':offer['offerId'],
-                        'retailer_id':offer['retailerId'],
-                        'country_code':offer['countryCode'],
-                        'best_offer':offer['bestOffer'],
-                        'price':offer['price'],
-                        'fulfilment_method':offer['fulfilmentMethod'],
-                        'condition':offer['condition'],
-                        'ultimate_order_time':offer['ultimateOrderTime'],
-                        'min_delivery_date':offer['minDeliveryDate'],
-                        'max_delivery_date':offer['maxDeliveryDate'],
-                    })
-            if len(response_data["offers"]) == 50:
-                get_filtered_products(jwt_token, row, page + 1)
-    else:
-        print(f"Error: {response.status_code} - {response.reason}")
+        process_offers(response_data, row, product_data)
+        print("This is response_data", response_data)
+        if len(response_data.get("offers", [])) == 50:
+            fetch_product_offers(jwt_token, row, product_data, page + 1)
+
+    except requests.RequestException as e:
+        print(f"Request error: {e}")
 
 
-print(jwt_token, "jwt_token")
-# get_filtered_products(jwt_token, "8712799411319", 40)
+@functions_framework.http
+def fetch_data_worker(request):
+    jwt_token = login_bol()
+    print(jwt_token)
 
-
-def fetch_data_worker():
-    # while True:
-        query = f"""
+    query = f"""
             SELECT *
             FROM `{REQUEST_DATA.get('table_id')}`
-            LIMIT 10
+            LIMIT 500
         """
 
-        query_job = client.query(query)
-        for row in query_job:
-            print('request_id=======>: ',row['request_id'])
-            get_filtered_products(jwt_token,row)
-            row= dict(row)
-            row['job_id']=row['batch_id']
-            client.insert_rows_json( BOL_EAN_DATA.get('table_id'), [row])
-            client.insert_rows_json( BOL_OFFER_DATA.get('table_id'), [data])
-            data=[]
+    query_job = client.query(query)
+    for row in query_job:
+
+        jwt_token = Authorization_middleware(jwt_token)
+        print("request_id=======>: ", row["request_id"])
+        product_data = []
+        fetch_product_offers(jwt_token, product_data, row)
+        processed_row = prepare_row_for_insertion(row)
+
+        print(product_data, "product_data")
+
+        insert_into_bigquery(client, BOL_EAN_DATA.get("table_id"), [processed_row])
+        if product_data:
+            insert_into_bigquery(client, BOL_OFFER_DATA.get("table_id"), product_data)
+
+    return make_response("File and data received", 200)
 
 
+def prepare_row_for_insertion(row):
+    row_dict = dict(row)
+    row_dict["job_id"] = row_dict["batch_id"]
+    for key in ["is_fetched", "request_id", "batch_id", "retailer_id"]:
+        del row_dict[key]
+    return row_dict
 
-print(data, "data")
 
-fetch_data_worker()
+def insert_into_bigquery(client, table_id, data):
+    errors = client.insert_rows_json(table_id, data)
+    if errors:
+        print(f"Errors occurred while inserting into {table_id}:", errors)
