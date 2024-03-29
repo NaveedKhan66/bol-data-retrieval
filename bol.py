@@ -7,11 +7,15 @@ from bq_management.schemas import REQUEST_DATA, BOL_EAN_DATA, BOL_OFFER_DATA
 import functions_framework
 from flask import make_response
 import os
+import logging 
 
-BOL_CLIENT_ID = os.getenv("BOL_CLIENT_ID")
-BOL_CLIENT_SECRET = os.getenv("BOL_CLIENT_SECRET")
+logging.basicConfig(level=logging.INFO)
 
-BOL_BASE_API_URL = os.getenv("BOL_BASE_API_URL")
+
+BOL_CLIENT_ID = os.getenv("BOL_CLIENT_ID") if os.getenv("BOL_CLIENT_ID") else "c8946e8c-06fb-447f-aad6-f143496fcc18"
+BOL_CLIENT_SECRET = os.getenv("BOL_CLIENT_SECRET") if os.getenv("BOL_CLIENT_SECRET") else "Bl!ZfisCwDKON!+83ZG7fTMld!Kozbp2qQ0k7t?kCia7wfkgS)Kb13twdycbdcPD"
+
+BOL_BASE_API_URL = os.getenv("BOL_BASE_API_URL") if os.getenv("BOL_BASE_API_URL") else "https://api.bol.com"
 
 
 def encode_base64(string):
@@ -38,7 +42,7 @@ def login_bol():
         response_data = response.json()
         return response_data["access_token"]
     else:
-        print(f"Error: {response.status_code} - {response.reason}")
+        logging.info(f"Error: {response.status_code} - {response.reason}")
 
 
 def Authorization_middleware(jwt_token):
@@ -96,18 +100,17 @@ def fetch_product_offers(jwt_token, product_data, row, page=1):
 
         response_data = response.json()
         process_offers(response_data, row, product_data)
-        print("This is response_data", response_data)
+        logging.info("This is response_data", response_data)
         if len(response_data.get("offers", [])) == 50:
             fetch_product_offers(jwt_token, row, product_data, page + 1)
 
     except requests.RequestException as e:
-        print(f"Request error: {e}")
+        logging.info(f"Request error: {e}")
 
 
 @functions_framework.http
 def fetch_data_worker(request):
     jwt_token = login_bol()
-    print(jwt_token)
 
     query = f"""
             SELECT *
@@ -119,12 +122,12 @@ def fetch_data_worker(request):
     for row in query_job:
 
         jwt_token = Authorization_middleware(jwt_token)
-        print("request_id=======>: ", row["request_id"])
+        logging.info("request_id=======>: ", row["request_id"])
         product_data = []
         fetch_product_offers(jwt_token, product_data, row)
         processed_row = prepare_row_for_insertion(row)
 
-        print(product_data, "product_data")
+        logging.info(product_data, "product_data")
 
         insert_into_bigquery(client, BOL_EAN_DATA.get("table_id"), [processed_row])
         if product_data:
@@ -144,4 +147,4 @@ def prepare_row_for_insertion(row):
 def insert_into_bigquery(client, table_id, data):
     errors = client.insert_rows_json(table_id, data)
     if errors:
-        print(f"Errors occurred while inserting into {table_id}:", errors)
+        logging.info(f"Errors occurred while inserting into {table_id}:", errors)

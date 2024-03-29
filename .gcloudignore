@@ -15,3 +15,9 @@
 
 node_modules
 #!include:.gitignore
+env/
+optimistic-yeti-353713-eade4a9feeb0.json
+*__pycache__/
+Pipfile
+Pipfile.lock
+README.md

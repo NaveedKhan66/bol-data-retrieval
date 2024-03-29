@@ -10,7 +10,6 @@ from flask import make_response
 import logging
 from io import BytesIO
 import os
-from bol import fetch_data_worker
 
 # Logging Config
 logging.basicConfig(level=logging.INFO)
