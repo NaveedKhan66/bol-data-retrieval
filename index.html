@@ -107,7 +107,7 @@
           formData.append("eanFile", eanFile.files[0]);
           formData.append("retailerId", retailerId.value.trim());
 
-          fetch("http://localhost:8080/", {
+          fetch("http://localhost:8082/", {
             method: "POST",
             body: formData,
           })

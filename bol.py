@@ -7,15 +7,47 @@ from bq_management.schemas import REQUEST_DATA, BOL_EAN_DATA, BOL_OFFER_DATA
 import functions_framework
 from flask import make_response
 import os
-import logging 
+import logging
 
 logging.basicConfig(level=logging.INFO)
 
 
-BOL_CLIENT_ID = os.getenv("BOL_CLIENT_ID") if os.getenv("BOL_CLIENT_ID") else "c8946e8c-06fb-447f-aad6-f143496fcc18"
-BOL_CLIENT_SECRET = os.getenv("BOL_CLIENT_SECRET") if os.getenv("BOL_CLIENT_SECRET") else "Bl!ZfisCwDKON!+83ZG7fTMld!Kozbp2qQ0k7t?kCia7wfkgS)Kb13twdycbdcPD"
+BOL_CLIENT_ID = (
+    os.getenv("BOL_CLIENT_ID")
+    if os.getenv("BOL_CLIENT_ID")
+    else "c8946e8c-06fb-447f-aad6-f143496fcc18"
+)
+BOL_CLIENT_SECRET = (
+    os.getenv("BOL_CLIENT_SECRET")
+    if os.getenv("BOL_CLIENT_SECRET")
+    else "Bl!ZfisCwDKON!+83ZG7fTMld!Kozbp2qQ0k7t?kCia7wfkgS)Kb13twdycbdcPD"
+)
 
-BOL_BASE_API_URL = os.getenv("BOL_BASE_API_URL") if os.getenv("BOL_BASE_API_URL") else "https://api.bol.com"
+BOL_BASE_API_URL = (
+    os.getenv("BOL_BASE_API_URL")
+    if os.getenv("BOL_BASE_API_URL")
+    else "https://api.bol.com"
+)
+
+
+def delete_records_from_bq(table_id, condition):
+    """
+    Deletes records from a BigQuery table based on a condition.
+
+    Args:
+    table_id (str): The ID of the table from which to delete records (in the format `your-project.your_dataset.your_table`).
+    condition (str): The condition to use for deleting records (e.g., "id = 123").
+    """
+    print(condition, "conditionconditioncondition")
+    query = f"""
+    DELETE FROM `{table_id}`
+    WHERE {condition}
+    """
+
+    query_job = client.query(query)
+    query_job.result()
+
+    print(f"Deleted records from {table_id} where {condition}")
 
 
 def encode_base64(string):
@@ -100,7 +132,7 @@ def fetch_product_offers(jwt_token, product_data, row, page=1):
 
         response_data = response.json()
         process_offers(response_data, row, product_data)
-        logging.info("This is response_data", response_data)
+        # logging.info("This is response_data", response_data)
         if len(response_data.get("offers", [])) == 50:
             fetch_product_offers(jwt_token, row, product_data, page + 1)
 
@@ -122,16 +154,19 @@ def fetch_data_worker(request):
     for row in query_job:
 
         jwt_token = Authorization_middleware(jwt_token)
-        logging.info("request_id=======>: ", row["request_id"])
+        # logging.info("request_id=======>: ", row["request_id"])
         product_data = []
         fetch_product_offers(jwt_token, product_data, row)
         processed_row = prepare_row_for_insertion(row)
 
-        logging.info(product_data, "product_data")
+        # logging.info(processed_row, "product_data")
 
         insert_into_bigquery(client, BOL_EAN_DATA.get("table_id"), [processed_row])
         if product_data:
             insert_into_bigquery(client, BOL_OFFER_DATA.get("table_id"), product_data)
+            delete_records_from_bq(
+                REQUEST_DATA.get("table_id"), f"request_id = '{row['request_id']}'"
+            )
 
     return make_response("File and data received", 200)
 
@@ -139,7 +174,8 @@ def fetch_data_worker(request):
 def prepare_row_for_insertion(row):
     row_dict = dict(row)
     row_dict["job_id"] = row_dict["batch_id"]
-    for key in ["is_fetched", "request_id", "batch_id", "retailer_id"]:
+
+    for key in ["is_fetched", "batch_id", "request_id"]:
         del row_dict[key]
     return row_dict
 
@@ -147,4 +183,5 @@ def prepare_row_for_insertion(row):
 def insert_into_bigquery(client, table_id, data):
     errors = client.insert_rows_json(table_id, data)
     if errors:
-        logging.info(f"Errors occurred while inserting into {table_id}:", errors)
+        pass
+        # logging.info(f"Errors occurred while inserting into {table_id}:", errors)
