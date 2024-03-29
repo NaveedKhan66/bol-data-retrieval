@@ -4,12 +4,7 @@ from .constants import DATASET_ID
 REQUEST_DATA = {
     "table_id": f"{DATASET_ID}.request_data",
     "schema": [
-        SchemaField(
-            "retailer_id",
-            "STRING",
-            mode="REQUIRED",
-            description="client identity of the requesting client",
-        ),
+     
         SchemaField(
             "retailer_id",
             "STRING",
@@ -111,13 +106,13 @@ BOL_OFFER_DATA = {
         ),
         SchemaField(
             "best_offer",
-            "STRING",
+            "BOOL",
             mode="nullAble",
             description="price deviation of the product",
         ),
         SchemaField(
             "price",
-            "STRING",
+            "FLOAT64",
             mode="REQUIRED",
             description="price deviation of the product",
         ),

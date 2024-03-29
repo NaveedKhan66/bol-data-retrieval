@@ -22,12 +22,12 @@ This README provides instructions on how to set up and run the function locally 
     - Run the Functions Framework targeting your function.
     - Use the following command:
       ```
-      functions-framework --target=request_form
+      functions-framework --target=request_form --port=8081
       ```
 
 5. **Accessing the Local Cloud Function**:
     - With the Cloud Function running, you can access the form locally.
-    - Open a web browser and navigate to `localhost:8080`.
+    - Open a web browser and navigate to `localhost:8081`.
 
 6. **Interacting with the Form**:
     - Use the form on the local web page to insert data into BigQuery.
