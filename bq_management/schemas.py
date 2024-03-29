@@ -4,7 +4,6 @@ from .constants import DATASET_ID
 REQUEST_DATA = {
     "table_id": f"{DATASET_ID}.request_data",
     "schema": [
-     
         SchemaField(
             "retailer_id",
             "STRING",
@@ -62,10 +61,16 @@ BOL_EAN_DATA = {
             "EAN", "INTEGER", mode="REQUIRED", description="EAN of the BOL product"
         ),
         SchemaField(
+            "retailer_id",
+            "STRING",
+            mode="nullAble",
+            description="retailer that requested job",
+        ),
+        SchemaField(
             "price",
             "FLOAT",
             mode="REQUIRED",
-            description="price deviation of the product",
+            description="price of the product",
         ),
         SchemaField(
             "job_id",
@@ -84,67 +89,67 @@ BOL_OFFER_DATA = {
             "job_id",
             "STRING",
             mode="REQUIRED",
-            description="refers to the product request entry",
+            description="Unique request identifier",
         ),
         SchemaField(
             "bol_offer_id",
             "STRING",
             mode="REQUIRED",
-            description="price deviation of the product",
+            description="BOL's offer id",
         ),
         SchemaField(
             "retailer_id",
             "STRING",
             mode="nullAble",
-            description="price deviation of the product",
+            description="BOL offer retailer id",
         ),
         SchemaField(
             "country_code",
             "STRING",
             mode="nullAble",
-            description="price deviation of the product",
+            description="Country code",
         ),
         SchemaField(
             "best_offer",
             "BOOL",
             mode="nullAble",
-            description="price deviation of the product",
+            description="Boolean representing best offer",
         ),
         SchemaField(
             "price",
             "FLOAT64",
             mode="REQUIRED",
-            description="price deviation of the product",
+            description="Price of the product",
         ),
         SchemaField(
             "fulfilment_method",
             "STRING",
             mode="NULLABLE",
-            description="price deviation of the product",
+            description="Fulfilment method of the product",
         ),
         SchemaField(
             "condition",
             "STRING",
             mode="NULLABLE",
-            description="price deviation of the product",
+            description="Offer conditions",
         ),
         SchemaField(
             "ultimate_order_time",
             "STRING",
             mode="NULLABLE",
-            description="price deviation of the product",
+            description="Ultimate order time",
         ),
         SchemaField(
             "min_delivery_date",
             "STRING",
             mode="NULLABLE",
-            description="price deviation of the product",
+            description="Minimum delivery date",
         ),
         SchemaField(
             "max_delivery_date",
             "STRING",
             mode="NULLABLE",
-            description="price deviation of the product",
+            description="Maximum delivery date",
         ),
     ],
 }
