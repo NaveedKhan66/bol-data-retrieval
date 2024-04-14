@@ -22,6 +22,15 @@ def read_xls(file_stream) -> DataFrame:
 
 
 def bulk_insert(df: DataFrame, retailer_id, user_id):
+    """
+    Generate a unique batch_id and unique request_id for each row in the DataFrame.
+    Inserts the data into a BigQuery table.
+    
+    Args:
+        df (DataFrame): The DataFrame containing the data to be inserted.
+        retailer_id: The retailer ID associated with the data.
+        user_id: The user ID associated with the data.
+    """
 
     # Generate a unique batch_id
     batch_id = str(uuid.uuid4())

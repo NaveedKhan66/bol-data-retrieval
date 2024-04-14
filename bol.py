@@ -51,12 +51,27 @@ def delete_records_from_bq(table_id, condition):
 
 
 def encode_base64(string):
+    """
+    A function that encodes a string to base64.
+
+    Parameters:
+    string (str): The string to be encoded.
+
+    Returns:
+    str: The encoded string in base64.
+    """
     encoded_bytes = base64.b64encode(string.encode("utf-8"))
     encoded_string = encoded_bytes.decode("utf-8")
     return encoded_string
 
 
 def login_bol():
+    """
+    A function to handle the login process for the bol.com API.
+    This function sends a POST request to the login endpoint with client credentials 
+    to obtain an access token for authentication.
+    Returns the access token if the request is successful, otherwise logs an error.
+    """
     api_url = "https://login.bol.com/token?grant_type=client_credentials"
 
     bearer_token = encode_base64(f"{BOL_CLIENT_ID}:{BOL_CLIENT_SECRET}")
@@ -78,6 +93,16 @@ def login_bol():
 
 
 def authorization_middleware(jwt_token):
+    """
+    A function that serves as an authorization middleware by decoding a JWT token, 
+    checking its expiration time, refreshing it if necessary, and returning the JWT token.
+    
+    Parameters:
+    jwt_token (str): The JWT token to be decoded and validated.
+    
+    Returns:
+    str: The validated and possibly refreshed JWT token.
+    """
     decoded_token = jwt.decode(
         jwt_token, options={"verify_signature": False}, algorithms=["RS256"]
     )
@@ -88,6 +113,14 @@ def authorization_middleware(jwt_token):
 
 
 def is_within_threshold_percent(threshold, price, value):
+    """
+    Check if the given value is within a certain percentage threshold of the price.
+    
+    :param threshold: The percentage threshold within which the value should fall.
+    :param price: The base price to compare against.
+    :param value: The value to check if it falls within the threshold of the price.
+    :return: True if the value is within the threshold range, False otherwise.
+    """
     lower_bound = price - (threshold * price)
     upper_bound = price + (threshold * price)
 
@@ -115,12 +148,29 @@ def format_offer_data(offer, row):
 
 
 def process_offers(response_data, row, product_data):
+    """
+    Process offers based on response data, row, and product data.
+    
+    Parameters:
+    response_data (dict): The response data containing offers.
+    row (dict): The row data to compare prices.
+    product_data (list): The list to store formatted offer data.
+    """
     for offer in response_data.get("offers", []):
         if is_within_threshold_percent(0.1, row["price"], offer["price"]):
             product_data.append(format_offer_data(offer, row))
 
 
 def fetch_product_offers(jwt_token, product_data, row, page=1):
+    """
+    A function to fetch product offers using the provided JWT token and product data.
+    
+    Parameters:
+    - jwt_token (str): The JWT token for authentication.
+    - product_data (dict): Data related to the product.
+    - row (dict): The row data containing product information.
+    - page (int, optional): The page number for pagination (default is 1).
+    """
     api_url = f"{BOL_BASE_API_URL}/retailer/products/{row['EAN']}/offers?page={page}"
 
     headers = {
@@ -144,6 +194,11 @@ def fetch_product_offers(jwt_token, product_data, row, page=1):
 
 @functions_framework.http
 def fetch_data_worker(request):
+    """
+    This function fetches data from a specified table, processes it, and inserts it into BigQuery.
+    It uses a JWT token for authorization and includes a delay after every 5 iterations.
+    Returns a response indicating the successful retrieval of data.
+    """
     jwt_token = login_bol()
     counter = 0
     query = f"""
@@ -168,7 +223,7 @@ def fetch_data_worker(request):
             )
 
         # delay after 20 iterations
-        if counter % 20 == 0:
+        if counter % 5 == 0:
             time.sleep(30)
 
     return make_response("Retrieved the data from bol", 200)
