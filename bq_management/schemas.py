@@ -8,7 +8,7 @@ REQUEST_DATA = {
             "retailer_id",
             "STRING",
             mode="REQUIRED",
-            description="client identity of the requesting client",
+            description=" bol retailer identity of the requesting client",
         ),
         SchemaField(
             "client_id",
@@ -64,7 +64,7 @@ BOL_EAN_DATA = {
             "retailer_id",
             "STRING",
             mode="nullAble",
-            description="retailer that requested job",
+            description="bol retailer id that requested job",
         ),
         SchemaField(
             "price",
@@ -90,6 +90,21 @@ BOL_OFFER_DATA = {
             "STRING",
             mode="REQUIRED",
             description="Unique request identifier",
+        ),
+        SchemaField(
+            "user_retailer_id",
+            "STRING",
+            mode="REQUIRED",
+            description="bol retailer identity of the requesting client",
+        ),
+        SchemaField(
+            "client_id",
+            "STRING",
+            mode="REQUIRED",
+            description="client identity of the requesting client",
+        ),
+        SchemaField(
+            "EAN", "INTEGER", mode="REQUIRED", description="EAN of the BOL product"
         ),
         SchemaField(
             "bol_offer_id",
