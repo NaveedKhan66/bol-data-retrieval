@@ -91,6 +91,7 @@
         const form = document.getElementById("excelForm");
         const eanFile = document.getElementById("eanFile");
         const retailerId = document.getElementById("retailerId");
+        const userId = document.getElementById("user_id");
         const submitBtn = document.getElementById("submitBtn");
         const statusMessage = document.getElementById("status");
         const loader = document.getElementById("loader");
@@ -106,8 +107,10 @@
           const formData = new FormData();
           formData.append("eanFile", eanFile.files[0]);
           formData.append("retailerId", retailerId.value.trim());
-
-          fetch("http://localhost:8080/", {
+          formData.append("userId", userId.value.trim());
+          
+          //Use localhost address for local testing
+          fetch("https://us-central1-central-eon-418013.cloudfunctions.net/request_form/", {
             method: "POST",
             body: formData,
           })

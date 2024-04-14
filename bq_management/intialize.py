@@ -7,8 +7,9 @@ from google.api_core.exceptions import Conflict
 
 
 logging.basicConfig(level=logging.INFO)
-service_account_path = CREDS_FILE_PATH
-client = bigquery.Client.from_service_account_json(service_account_path)
+# service_account_path = CREDS_FILE_PATH
+# use service account file path with  bigquery.Client().service_account_json for local testing
+client = bigquery.Client()
 
 
 def create_dataset():
