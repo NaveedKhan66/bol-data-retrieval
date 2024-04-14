@@ -68,7 +68,7 @@ def encode_base64(string):
 def login_bol():
     """
     A function to handle the login process for the bol.com API.
-    This function sends a POST request to the login endpoint with client credentials 
+    This function sends a POST request to the login endpoint with client credentials
     to obtain an access token for authentication.
     Returns the access token if the request is successful, otherwise logs an error.
     """
@@ -84,7 +84,7 @@ def login_bol():
     request_data = {}
 
     response = requests.post(api_url, headers=headers, json=request_data)
-
+    print(response.json(), "Thisi s response.json()")
     if response.ok:
         response_data = response.json()
         return response_data["access_token"]
@@ -94,12 +94,12 @@ def login_bol():
 
 def authorization_middleware(jwt_token):
     """
-    A function that serves as an authorization middleware by decoding a JWT token, 
+    A function that serves as an authorization middleware by decoding a JWT token,
     checking its expiration time, refreshing it if necessary, and returning the JWT token.
-    
+
     Parameters:
     jwt_token (str): The JWT token to be decoded and validated.
-    
+
     Returns:
     str: The validated and possibly refreshed JWT token.
     """
@@ -115,7 +115,7 @@ def authorization_middleware(jwt_token):
 def is_within_threshold_percent(threshold, price, value):
     """
     Check if the given value is within a certain percentage threshold of the price.
-    
+
     :param threshold: The percentage threshold within which the value should fall.
     :param price: The base price to compare against.
     :param value: The value to check if it falls within the threshold of the price.
@@ -150,7 +150,7 @@ def format_offer_data(offer, row):
 def process_offers(response_data, row, product_data):
     """
     Process offers based on response data, row, and product data.
-    
+
     Parameters:
     response_data (dict): The response data containing offers.
     row (dict): The row data to compare prices.
@@ -164,32 +164,39 @@ def process_offers(response_data, row, product_data):
 def fetch_product_offers(jwt_token, product_data, row, page=1):
     """
     A function to fetch product offers using the provided JWT token and product data.
-    
+
     Parameters:
     - jwt_token (str): The JWT token for authentication.
     - product_data (dict): Data related to the product.
     - row (dict): The row data containing product information.
-    - page (int, optional): The page number for pagination (default is 1).
     """
-    api_url = f"{BOL_BASE_API_URL}/retailer/products/{row['EAN']}/offers?page={page}"
+    while True:
+        api_url = (
+            f"{BOL_BASE_API_URL}/retailer/products/{row['EAN']}/offers?page={page}"
+        )
 
-    headers = {
-        "Authorization": f"Bearer {jwt_token}",
-        "Content-Type": "application/vnd.retailer.v9+json",
-        "Accept": "application/vnd.retailer.v9+json",
-    }
+        headers = {
+            "Authorization": f"Bearer {jwt_token}",
+            "Content-Type": "application/vnd.retailer.v9+json",
+            "Accept": "application/vnd.retailer.v9+json",
+        }
 
-    try:
-        response = requests.get(api_url, headers=headers)
-        response.raise_for_status()
+        try:
+            response = requests.get(api_url, headers=headers)
+            response.raise_for_status()
 
-        response_data = response.json()
-        process_offers(response_data, row, product_data)
-        if len(response_data.get("offers", [])) == 50:
-            fetch_product_offers(jwt_token, row, product_data, page + 1)
+            response_data = response.json()
+            process_offers(response_data, row, product_data)
 
-    except requests.RequestException as e:
-        logging.info(f"Request error: {e}")
+            # Check if there are still offers to fetch in the next page
+            if len(response_data.get("offers", [])) == 50:
+                page += 1
+            else:
+                break  # Exit the loop if there are no more pages
+
+        except requests.RequestException as e:
+            logging.info(f"Request error: {e}")
+            break  # Exit the loop in case of a request failure
 
 
 @functions_framework.http
@@ -218,13 +225,13 @@ def fetch_data_worker(request):
         insert_into_bigquery(client, BOL_EAN_DATA.get("table_id"), [processed_row])
         if product_data:
             insert_into_bigquery(client, BOL_OFFER_DATA.get("table_id"), product_data)
-            delete_records_from_bq(
-                REQUEST_DATA.get("table_id"), f"request_id = '{row['request_id']}'"
-            )
+        delete_records_from_bq(
+            REQUEST_DATA.get("table_id"), f"request_id = '{row['request_id']}'"
+        )
 
         # delay after 20 iterations
-        if counter % 5 == 0:
-            time.sleep(30)
+        # if counter % 20 == 0:
+        #     time.sleep(30)
 
     return make_response("Retrieved the data from bol", 200)
 
