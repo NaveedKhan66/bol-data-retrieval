@@ -1,137 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-  </head>
 
-  <body>
-    <div class="w-screen h-screen bg-gray-200 flex justify-center items-center">
-      <div class="w-1/4 bg-white">
-        <h1
-          class="font-semibold text-gray-700 text-4xl p-8 flex justify-center"
-        >
-          Submit Form
-        </h1>
-        <form id="excelForm" class="bg-white shadow-md rounded px-8 pt-6 pb-8">
-          <div class="mb-4">
-            <label
-              class="block text-gray-700 text-sm font-bold mb-2"
-              for="retailerId"
-            >
-              Retailer ID
-            </label>
-            <input
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="retailerId"
-              type="text"
-              required
-              placeholder="Enter Retailer Id here  ...!"
-            />
-          </div>
-          <div class="mb-4">
-            <label
-              class="block text-gray-700 text-sm font-bold mb-2"
-              for="eanFile"
-            >
-              EAN Excel File
-            </label>
-            <input
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="eanFile"
-              type="file"
-            />
-          </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Index</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
 
-          <div class="flex items-end justify-end">
-            <button
-              type="button"
-              id="submitBtn"
-              class="flex bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              <svg
-                id="loader"
-                class="animate-spin h-5 w-5 mr-3 hidden text-white"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A8.014 8.014 0 014.01 12H0c0 4.418 3.582 8 8 8v-4c-2.667 0-4.892-1.159-6.494-2.709z"
-                ></path>
-              </svg>
-              <span id="btnText">Submit</span>
-            </button>
-          </div>
-        </form>
-        <div
-          id="status"
-          class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <span class="block sm:inline">Form Submitted Successfully!</span>
+<body>
+  <div class="w-screen h-screen bg-gray-200 flex justify-center items-center">
+    <div class="w-1/4 bg-white">
+      <h1 class="font-semibold text-gray-700 text-4xl p-8 flex justify-center">
+        Submit Form
+      </h1>
+      <form id="excelForm" class="bg-white shadow-md rounded px-8 pt-6 pb-8">
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="retailerId">
+            Retailer ID
+          </label>
+          <input
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="retailerId" type="text" required placeholder="Enter Retailer Id here  ...!" />
         </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="eanFile">
+            EAN Excel File
+          </label>
+          <input
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="eanFile" type="file" />
+        </div>
+
+        <div class="flex items-end justify-end">
+          <button type="button" id="submitBtn"
+            class="flex bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            <svg id="loader" class="animate-spin h-5 w-5 mr-3 hidden text-white" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A8.014 8.014 0 014.01 12H0c0 4.418 3.582 8 8 8v-4c-2.667 0-4.892-1.159-6.494-2.709z">
+              </path>
+            </svg>
+            <span id="btnText">Submit</span>
+          </button>
+        </div>
+      </form>
+      <div id="status" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+        role="alert">
+        <span class="block sm:inline">Form Submitted Successfully!</span>
       </div>
     </div>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const form = document.getElementById("excelForm");
-        const eanFile = document.getElementById("eanFile");
-        const retailerId = document.getElementById("retailerId");
-        const userId = document.getElementById("user_id");
-        const submitBtn = document.getElementById("submitBtn");
-        const statusMessage = document.getElementById("status");
-        const loader = document.getElementById("loader");
-        const btnText = document.getElementById("btnText");
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("excelForm");
+      const eanFile = document.getElementById("eanFile");
+      const retailerId = document.getElementById("retailerId");
+      const userId = document.getElementById("user_id");
+      const submitBtn = document.getElementById("submitBtn");
+      const statusMessage = document.getElementById("status");
+      const loader = document.getElementById("loader");
+      const btnText = document.getElementById("btnText");
 
-        submitBtn.addEventListener("click", (event) => {
-          event.preventDefault(); // Prevent default form submission
-          submitBtn.disabled = true; // Disable button while submitting
+      submitBtn.addEventListener("click", (event) => {
+        event.preventDefault(); // Prevent default form submission
+        submitBtn.disabled = true; // Disable button while submitting
 
-          loader.classList.remove("hidden");
-          btnText.textContent = "Submitting...";
+        loader.classList.remove("hidden");
+        btnText.textContent = "Submitting...";
 
-          const formData = new FormData();
-          formData.append("eanFile", eanFile.files[0]);
-          formData.append("retailerId", retailerId.value.trim());
-          formData.append("userId", userId.value.trim());
-          
-          //Use localhost address for local testing
-          fetch("https://us-central1-central-eon-418013.cloudfunctions.net/request_form/", {
-            method: "POST",
-            body: formData,
+        const formData = new FormData();
+        formData.append("eanFile", eanFile.files[0]);
+        formData.append("retailerId", retailerId.value.trim());
+        formData.append("userId", userId.value.trim());
+
+        //Use localhost address for local testing
+        fetch("https://us-central1-central-eon-418013.cloudfunctions.net/request_form/", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => {
+            if (response.ok) {
+              statusMessage.classList.remove("hidden");
+              submitBtn.disabled = false;
+              loader.classList.add("hidden");
+              btnText.textContent = "Submit";
+              setTimeout(() => {
+                statusMessage.classList.add("hidden");
+              }, 6000);
+            } else {
+              throw new Error("Failed to submit form");
+            }
           })
-            .then((response) => {
-              if (response.ok) {
-                statusMessage.classList.remove("hidden");
-                submitBtn.disabled = false;
-                loader.classList.add("hidden");
-                btnText.textContent = "Submit";
-                setTimeout(() => {
-                  statusMessage.classList.add("hidden");
-                }, 6000);
-              } else {
-                throw new Error("Failed to submit form");
-              }
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-            });
-        });
+          .catch((error) => {
+            console.error("Error:", error);
+          });
       });
-    </script>
-  </body>
+    });
+  </script>
+</body>
+
 </html>
