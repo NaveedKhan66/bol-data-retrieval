@@ -8,6 +8,7 @@ import functions_framework
 from flask import make_response
 import os
 import logging
+import time
 
 logging.basicConfig(level=logging.INFO)
 
@@ -38,7 +39,6 @@ def delete_records_from_bq(table_id, condition):
     table_id (str): The ID of the table from which to delete records (in the format `your-project.your_dataset.your_table`).
     condition (str): The condition to use for deleting records (e.g., "id = 123").
     """
-    print(condition, "conditionconditioncondition")
     query = f"""
     DELETE FROM `{table_id}`
     WHERE {condition}
@@ -77,7 +77,7 @@ def login_bol():
         logging.info(f"Error: {response.status_code} - {response.reason}")
 
 
-def Authorization_middleware(jwt_token):
+def authorization_middleware(jwt_token):
     decoded_token = jwt.decode(
         jwt_token, options={"verify_signature": False}, algorithms=["RS256"]
     )
@@ -132,7 +132,6 @@ def fetch_product_offers(jwt_token, product_data, row, page=1):
 
         response_data = response.json()
         process_offers(response_data, row, product_data)
-        # logging.info("This is response_data", response_data)
         if len(response_data.get("offers", [])) == 50:
             fetch_product_offers(jwt_token, row, product_data, page + 1)
 
@@ -143,7 +142,7 @@ def fetch_product_offers(jwt_token, product_data, row, page=1):
 @functions_framework.http
 def fetch_data_worker(request):
     jwt_token = login_bol()
-
+    counter = 0
     query = f"""
             SELECT *
             FROM `{REQUEST_DATA.get('table_id')}`
@@ -152,14 +151,11 @@ def fetch_data_worker(request):
 
     query_job = client.query(query)
     for row in query_job:
-
-        jwt_token = Authorization_middleware(jwt_token)
-        # logging.info("request_id=======>: ", row["request_id"])
+        counter += 1
+        jwt_token = authorization_middleware(jwt_token)
         product_data = []
         fetch_product_offers(jwt_token, product_data, row)
         processed_row = prepare_row_for_insertion(row)
-
-        # logging.info(processed_row, "product_data")
 
         insert_into_bigquery(client, BOL_EAN_DATA.get("table_id"), [processed_row])
         if product_data:
@@ -168,7 +164,11 @@ def fetch_data_worker(request):
                 REQUEST_DATA.get("table_id"), f"request_id = '{row['request_id']}'"
             )
 
-    return make_response("File and data received", 200)
+        # delay after 20 iterations
+        if counter % 20 == 0:
+            time.sleep(30)
+
+    return make_response("Retrieved the data from bol", 200)
 
 
 def prepare_row_for_insertion(row):
@@ -183,5 +183,5 @@ def prepare_row_for_insertion(row):
 def insert_into_bigquery(client, table_id, data):
     errors = client.insert_rows_json(table_id, data)
     if errors:
-        pass
-        # logging.info(f"Errors occurred while inserting into {table_id}:", errors)
+        # pass
+        logging.info(f"Errors occurred while inserting into {table_id}: {errors}")
