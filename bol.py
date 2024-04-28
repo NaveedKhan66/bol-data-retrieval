@@ -84,7 +84,6 @@ def login_bol():
     request_data = {}
 
     response = requests.post(api_url, headers=headers, json=request_data)
-    print(response.json(), "Thisi s response.json()")
     if response.ok:
         response_data = response.json()
         return response_data["access_token"]
@@ -144,10 +143,12 @@ def format_offer_data(offer, row):
         "ultimate_order_time": offer.get("ultimateOrderTime"),
         "min_delivery_date": offer.get("minDeliveryDate"),
         "max_delivery_date": offer.get("maxDeliveryDate"),
+        "retailer_display_name": offer.get("retailer_display_name"),
+        "deviation":row.get("deviation"),
     }
 
 
-def process_offers(response_data, row, product_data):
+def process_offers(jwt_token,response_data, row, product_data):
     """
     Process offers based on response data, row, and product data.
 
@@ -158,7 +159,50 @@ def process_offers(response_data, row, product_data):
     """
     for offer in response_data.get("offers", []):
         if is_within_threshold_percent(0.1, row["price"], offer["price"]):
+            offer['retailer_display_name']=fetch_retailer_info(jwt_token,offer.get("retailerId"),offer)
             product_data.append(format_offer_data(offer, row))
+
+def fetch_retailer_info(jwt_token, retailer_id,data):
+    """
+    A function to fetch product offers using the provided JWT token and product data.
+
+    Parameters:
+    - jwt_token (str): The JWT token for authentication.
+    - product_data (dict): Data related to the product.
+    - row (dict): The row data containing product information.
+    """
+    while True:
+        api_url = (
+            f"{BOL_BASE_API_URL}/retailer/retailers/{retailer_id}"
+        )
+
+        headers = {
+            "Authorization": f"Bearer {jwt_token}",
+            "Content-Type": "application/vnd.retailer.v9+json",
+            "Accept": "application/vnd.retailer.v9+json",
+        }
+
+        try:
+            response = requests.get(api_url, headers=headers)
+            response.raise_for_status()
+
+            response_data = response.json()
+            print(response_data,"Retailer data")
+            return response_data.get('displayName')
+            # process_offers(response_data, row, product_data)
+
+            # # Check if there are still offers to fetch in the next page
+            # if len(response_data.get("offers", [])) == 50:
+            #     page += 1
+            # else:
+            #     break  # Exit the loop if there are no more pages
+
+        except requests.RequestException as e:
+            logging.info(f"Request error: {e}")
+            break  # Exit the loop in case of a request failure
+
+
+
 
 
 def fetch_product_offers(jwt_token, product_data, row, page=1):
@@ -186,7 +230,7 @@ def fetch_product_offers(jwt_token, product_data, row, page=1):
             response.raise_for_status()
 
             response_data = response.json()
-            process_offers(response_data, row, product_data)
+            process_offers(jwt_token,response_data, row, product_data)
 
             # Check if there are still offers to fetch in the next page
             if len(response_data.get("offers", [])) == 50:
