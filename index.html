@@ -97,17 +97,14 @@
           body: formData,
         })
         .then((response) => {
-          if (response.ok) {
-            statusMessage.classList.remove("hidden");
-            submitBtn.disabled = false;
-            loader.classList.add("hidden");
-            btnText.textContent = "Submit";
-            setTimeout(() => {
-              statusMessage.classList.add("hidden");
-            }, 6000);
-          } else {
-            throw new Error("Failed to submit form");
-          }
+          statusMessage.classList.remove("hidden");
+          submitBtn.disabled = false;
+          loader.classList.add("hidden");
+          btnText.textContent = "Submit";
+          setTimeout(() => {
+            statusMessage.classList.add("hidden");
+          }, 6000);
+          
         })
         .catch((error) => {
           console.error("Error:", error);
