@@ -120,8 +120,8 @@ def is_within_threshold_percent(threshold, price, value):
     :param value: The value to check if it falls within the threshold of the price.
     :return: True if the value is within the threshold range, False otherwise.
     """
-    lower_bound = price - (threshold * price)
-    upper_bound = price + (threshold * price)
+    lower_bound = price - (threshold / 100 * price)
+    upper_bound = price + (threshold / 100 * price)
 
     return lower_bound <= value <= upper_bound
 
@@ -144,11 +144,11 @@ def format_offer_data(offer, row):
         "min_delivery_date": offer.get("minDeliveryDate"),
         "max_delivery_date": offer.get("maxDeliveryDate"),
         "retailer_display_name": offer.get("retailer_display_name"),
-        "deviation":row.get("deviation"),
+        "deviation": row.get("deviation"),
     }
 
 
-def process_offers(jwt_token,response_data, row, product_data):
+def process_offers(jwt_token, response_data, row, product_data):
     """
     Process offers based on response data, row, and product data.
 
@@ -158,23 +158,23 @@ def process_offers(jwt_token,response_data, row, product_data):
     product_data (list): The list to store formatted offer data.
     """
     for offer in response_data.get("offers", []):
-        if is_within_threshold_percent(0.1, row["price"], offer["price"]):
-            offer['retailer_display_name']=fetch_retailer_info(jwt_token,offer.get("retailerId"),offer)
+        if is_within_threshold_percent(row["deviation"], row["price"], offer["price"]):
+            offer["retailer_display_name"] = fetch_retailer_info(
+                jwt_token, offer.get("retailerId")
+            )
             product_data.append(format_offer_data(offer, row))
 
-def fetch_retailer_info(jwt_token, retailer_id,data):
+
+def fetch_retailer_info(jwt_token, retailer_id):
     """
-    A function to fetch product offers using the provided JWT token and product data.
+    A function to fetch retailer info provided JWT token and retailer_id.
 
     Parameters:
     - jwt_token (str): The JWT token for authentication.
-    - product_data (dict): Data related to the product.
-    - row (dict): The row data containing product information.
+    - retailer_id (int): Retailer id of product.
     """
     while True:
-        api_url = (
-            f"{BOL_BASE_API_URL}/retailer/retailers/{retailer_id}"
-        )
+        api_url = f"{BOL_BASE_API_URL}/retailer/retailers/{retailer_id}"
 
         headers = {
             "Authorization": f"Bearer {jwt_token}",
@@ -187,22 +187,11 @@ def fetch_retailer_info(jwt_token, retailer_id,data):
             response.raise_for_status()
 
             response_data = response.json()
-            print(response_data,"Retailer data")
-            return response_data.get('displayName')
-            # process_offers(response_data, row, product_data)
-
-            # # Check if there are still offers to fetch in the next page
-            # if len(response_data.get("offers", [])) == 50:
-            #     page += 1
-            # else:
-            #     break  # Exit the loop if there are no more pages
+            return response_data.get("displayName")
 
         except requests.RequestException as e:
-            logging.info(f"Request error: {e}")
+            logging.info(f"Request error at retailer api: {e}")
             break  # Exit the loop in case of a request failure
-
-
-
 
 
 def fetch_product_offers(jwt_token, product_data, row, page=1):
@@ -230,7 +219,7 @@ def fetch_product_offers(jwt_token, product_data, row, page=1):
             response.raise_for_status()
 
             response_data = response.json()
-            process_offers(jwt_token,response_data, row, product_data)
+            process_offers(jwt_token, response_data, row, product_data)
 
             # Check if there are still offers to fetch in the next page
             if len(response_data.get("offers", [])) == 50:
@@ -284,7 +273,7 @@ def prepare_row_for_insertion(row):
     row_dict = dict(row)
     row_dict["job_id"] = row_dict["batch_id"]
 
-    for key in ["is_fetched", "batch_id", "request_id"]:
+    for key in ["is_fetched", "batch_id", "request_id", "deviation"]:
         del row_dict[key]
     return row_dict
 
