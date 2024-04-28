@@ -25,7 +25,7 @@ def bulk_insert(df: DataFrame, retailer_id, user_id, deviation):
     """
     Generate a unique batch_id and unique request_id for each row in the DataFrame.
     Inserts the data into a BigQuery table.
-    
+
     Args:
         df (DataFrame): The DataFrame containing the data to be inserted.
         retailer_id: The retailer ID associated with the data.
@@ -43,11 +43,11 @@ def bulk_insert(df: DataFrame, retailer_id, user_id, deviation):
         df["batch_id"] = batch_id
         df["is_fetched"] = False
         df["client_id"] = client_id
-        
+
         # explicit type conversion to prevent pandas errors
         df["retailer_id"] = retailer_id
-        df['retailer_id'] = df["retailer_id"].astype("str") 
-        
+        df["retailer_id"] = df["retailer_id"].astype("str")
+
         df["deviation"] = float(deviation)
         df["deviation"] = df["deviation"].astype("float")
 
@@ -86,16 +86,20 @@ def bulk_insert(df: DataFrame, retailer_id, user_id, deviation):
 def request_form(request):
     if request.method == "GET":
         # Read HTML content from index form file
-        user_id = request.args.get('user_id', default=None)  # Default to None if not provided
+        user_id = request.args.get(
+            "user_id", default=None
+        )  # Default to None if not provided
         if not user_id:
             return make_response("User is unauthenticated", 400)
         with open("index.html", "r") as file:
             html_content = file.read()
-        
+
         # Add user ID to form
-        hidden_field = f'<input type="hidden" id="user_id" name="user_id" value="{user_id}">'
-        html_content = html_content.replace('</form>', f'{hidden_field}</form>')
-        
+        hidden_field = (
+            f'<input type="hidden" id="user_id" name="user_id" value="{user_id}">'
+        )
+        html_content = html_content.replace("</form>", f"{hidden_field}</form>")
+
         return make_response(html_content, 200)
 
     elif request.method == "POST":
@@ -105,9 +109,9 @@ def request_form(request):
             retailer_id = request.form["retailerId"]
             user_id = request.form["userId"]
             deviation = request.form["deviation"]
-            
+
             logging.info("User id: " + str(user_id))
-            
+
             file_stream = BytesIO(file.read())
             df = read_xls(file_stream)
 

@@ -15,13 +15,9 @@ logging.basicConfig(level=logging.INFO)
 
 BOL_CLIENT_ID = (
     os.getenv("BOL_CLIENT_ID")
-    if os.getenv("BOL_CLIENT_ID")
-    else "c8946e8c-06fb-447f-aad6-f143496fcc18"
 )
 BOL_CLIENT_SECRET = (
     os.getenv("BOL_CLIENT_SECRET")
-    if os.getenv("BOL_CLIENT_SECRET")
-    else "Bl!ZfisCwDKON!+83ZG7fTMld!Kozbp2qQ0k7t?kCia7wfkgS)Kb13twdycbdcPD"
 )
 
 BOL_BASE_API_URL = (
