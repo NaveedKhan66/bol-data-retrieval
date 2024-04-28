@@ -26,6 +26,12 @@ REQUEST_DATA = {
             description="price deviation of the product",
         ),
         SchemaField(
+            "deviation",
+            "FLOAT",
+            mode="REQUIRED",
+            description="deviation of price in percentage",
+        ),
+        SchemaField(
             "batch_id",
             "STRING",
             mode="REQUIRED",
@@ -116,7 +122,13 @@ BOL_OFFER_DATA = {
             "retailer_id",
             "STRING",
             mode="nullAble",
-            description="BOL offer retailer id",
+            description="BOL offer retailer name",
+        ),
+        SchemaField(
+            "retailer_display_name",
+            "STRING",
+            mode="nullAble",
+            description="BOL offer retailer name",
         ),
         SchemaField(
             "country_code",
@@ -135,6 +147,12 @@ BOL_OFFER_DATA = {
             "FLOAT64",
             mode="REQUIRED",
             description="Price of the product",
+        ),
+        SchemaField(
+            "deviation",
+            "FLOAT",
+            mode="REQUIRED",
+            description="deviation of price in percentage",
         ),
         SchemaField(
             "fulfilment_method",
