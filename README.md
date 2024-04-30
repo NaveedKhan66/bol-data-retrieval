@@ -70,15 +70,14 @@ This project includes two main Cloud Functions:
    --env-vars-file=.env.yaml --service-account=your-service-account@gcp.com
    ```
 
-3. **Set Up Pub/Sub Trigger**
-   - Create a Pub/Sub topic to trigger the `fetch_data_worker` function based on your schedule.
+3. **Set Up scheduler**
+   - Create a scheduler on gcp which triggers the fetch_data_worker function according to the set schedule.
 
 4. **Deploy `fetch_data_worker` Cloud Function**
    ```bash
-   gcloud functions deploy fetch_data_worker --gen2 \
-   --runtime=python310 \
-   --allow-unauthenticated --trigger-topic=your-trigger-topic-name \
-   --env-vars-file=.env.yaml --service-account=your-service-account@gcp.com
+   gcloud functions deploy fetch_data_worker --gen2 \--runtime=python310 \
+   --allow-unauthenticated --trigger-http --env-vars-file=.env.yaml\
+   --service-account=<your-service-account@gcp.com>
    ```
 
 ## Additional Notes
