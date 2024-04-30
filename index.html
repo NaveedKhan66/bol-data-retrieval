@@ -35,6 +35,13 @@
           <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="eanFile" type="file" />
         </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="articles">
+            Min no of Articles
+          </label>
+          <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="articles" type="number" required placeholder="Enter min no of articles" />
+        </div>
 
         <div class="flex items-end justify-end">
           <button type="button" id="submitBtn"
@@ -60,6 +67,7 @@
       const eanFile = document.getElementById("eanFile");
       const retailerId = document.getElementById("retailerId");
       const deviation = document.getElementById("deviation");
+      const articles = document.getElementById("articles");
       const userId = document.getElementById("user_id");
       const deviationError = document.getElementById("deviationError");
       const submitBtn = document.getElementById("submitBtn");
@@ -82,6 +90,7 @@
         formData.append("retailerId", retailerId.value.trim());
         formData.append("userId", userId.value.trim());
         formData.append("deviation", deviation.value.trim());
+        formData.append("articles", articles.value.trim());
 
         // Use localhost address for local testing
         // fetch("http://localhost:8080/", {

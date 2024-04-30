@@ -141,6 +141,7 @@ def format_offer_data(offer, row):
         "max_delivery_date": offer.get("maxDeliveryDate"),
         "retailer_display_name": offer.get("retailer_display_name"),
         "deviation": row.get("deviation"),
+        "min_articles": int(row.get("min_articles")),
     }
 
 
@@ -268,7 +269,7 @@ def fetch_data_worker(request):
 def prepare_row_for_insertion(row):
     row_dict = dict(row)
     row_dict["job_id"] = row_dict["batch_id"]
-
+    row_dict["min_articles"] = int(row_dict["min_articles"])
     for key in ["is_fetched", "batch_id", "request_id", "deviation"]:
         del row_dict[key]
     return row_dict

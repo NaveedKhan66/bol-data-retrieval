@@ -21,7 +21,7 @@ def read_xls(file_stream) -> DataFrame:
     return dataframe_validation(df)
 
 
-def bulk_insert(df: DataFrame, retailer_id, user_id, deviation):
+def bulk_insert(df: DataFrame, retailer_id, user_id, deviation, min_articles):
     """
     Generate a unique batch_id and unique request_id for each row in the DataFrame.
     Inserts the data into a BigQuery table.
@@ -47,6 +47,9 @@ def bulk_insert(df: DataFrame, retailer_id, user_id, deviation):
         # explicit type conversion to prevent pandas errors
         df["retailer_id"] = retailer_id
         df["retailer_id"] = df["retailer_id"].astype("str")
+        
+        df["min_articles"] = min_articles
+        df["min_articles"] = df["min_articles"].astype("int")
 
         df["deviation"] = float(deviation)
         df["deviation"] = df["deviation"].astype("float")
@@ -109,13 +112,14 @@ def request_form(request):
             retailer_id = request.form["retailerId"]
             user_id = request.form["userId"]
             deviation = request.form["deviation"]
+            min_articles = int(request.form["articles"])
 
             logging.info("User id: " + str(user_id))
 
             file_stream = BytesIO(file.read())
             df = read_xls(file_stream)
 
-            bulk_insert(df, retailer_id, user_id, deviation)
+            bulk_insert(df, retailer_id, user_id, deviation, min_articles)
             return make_response("File and data received", 200)
         except Exception as e:
             logging.error(f"Exception while submitting post: {e}")

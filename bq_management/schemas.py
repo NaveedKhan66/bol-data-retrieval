@@ -50,6 +50,12 @@ REQUEST_DATA = {
             mode="REQUIRED",
             description="Unique request identifier",
         ),
+        SchemaField(
+            "min_articles",
+            "NUMERIC",
+            mode="REQUIRED",
+            description="Minimum no of articles defined for the alert",
+        ),
     ],
 }
 
@@ -83,6 +89,12 @@ BOL_EAN_DATA = {
             "STRING",
             mode="REQUIRED",
             description="Unique request identifier",
+        ),
+        SchemaField(
+            "min_articles",
+            "NUMERIC",
+            mode="REQUIRED",
+            description="Minimum no of articles defined for the alert",
         ),
     ],
 }
@@ -183,6 +195,12 @@ BOL_OFFER_DATA = {
             "STRING",
             mode="NULLABLE",
             description="Maximum delivery date",
+        ),
+        SchemaField(
+            "min_articles",
+            "NUMERIC",
+            mode="REQUIRED",
+            description="Minimum no of articles defined for the alert",
         ),
     ],
 }
